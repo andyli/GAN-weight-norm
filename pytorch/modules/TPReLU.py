@@ -14,7 +14,7 @@ class TPReLU(Module):
         self.bias = Parameter(torch.zeros(num_parameters))
 
     def forward(self, input):
-    	bias_resize = self.bias.view(1, self.num_parameters, *((1,) * (input.dim() - 2))).expand_as(input)
+        bias_resize = self.bias.view(1, self.num_parameters, *((1,) * (input.dim() - 2))).expand_as(input)
         return F.prelu(input - bias_resize, self.weight.clamp(0, 1)) + bias_resize
 
     def __repr__(self):
