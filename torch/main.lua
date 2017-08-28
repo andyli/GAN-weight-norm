@@ -315,11 +315,19 @@ else
 
             local sample = torch.Tensor(opt.batch_size, 3, opt.height, opt.width):cuda()
             for i = 1, opt.batch_size do
-                state.current_sample = state.current_sample + 1
-                sample[i]:copy(get_data(train_index[state.index_shuffle[state.current_sample]]))
-                if state.current_sample == train_index:size(1) then
-                    state.current_sample = 0
-                end
+                local ok, data
+                repeat
+                    state.current_sample = state.current_sample + 1
+                    local index = train_index[state.index_shuffle[state.current_sample]]
+                    ok, data = pcall(get_data, index)
+                    if not ok then
+                        print(string.format('Failed to load sample %d: %s', index, data))
+                    end
+                    if state.current_sample == train_index:size(1) then
+                        state.current_sample = 0
+                    end
+                until ok
+                sample[i]:copy(data)
             end
             local dis_output = dis:forward(sample)
             local dis_loss = train_cri:forward(dis_output, ones)
